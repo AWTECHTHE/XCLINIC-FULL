@@ -47,7 +47,7 @@ Neste guia, você aprenderá como instalar e configurar o Capacitor no seu proje
 
 Antes de começar, verifique se o seu sistema tem os seguintes requisitos:
 
-- Node.js Versão 14 ou superior
+- Node.js Versão 20 ou superior
 - Yarn Versão 2 ou superior
 - React Native Versão 0.69 ou superior
 
@@ -97,6 +97,22 @@ npx cap open ios
 
 Isso abrirá o projeto no Android Studio ou no Xcode, respectivamente. Agora, você pode compilar e testar o seu aplicativo com facilidade.
 
+## Comandos Adicionais
+
+Aqui estão alguns comandos adicionais que podem ser úteis:
+
+```bash
+npx cap copy
+# Copia os arquivos web para as plataformas nativas
+
+npx cap update
+# Atualiza as dependências do Capacitor para a versão mais recente
+
+npx cap doctor
+# Verifica a configuração do projeto e sugere correções
+```
+
 ## Conclusão
 
 Você conseguiu instalar e configurar o Capacitor no seu projeto React Native! Agora, você pode compilar e testar o seu aplicativo com facilidade. Se tiver algum problema durante a instalação ou configuração, não hesite em perguntar na comunidade do React Native ou no GitHub. Boa sorte com o seu projeto!
+
