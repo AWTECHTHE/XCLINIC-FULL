@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+python-jose[cryptography]
+passlib[bcrypt]
+psycopg2
+psycopg2-binary
+redis
+asyncpg
+alembic
+psycopg2
+pydantic-settings
+bcrypt
+# ...existing dependencies...
