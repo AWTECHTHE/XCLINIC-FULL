@@ -4,7 +4,7 @@ import React from 'react';
 
 export default function Sidebar() {
   return (
-    <aside className="w-64 bg-blue-900 text-white flex flex-col">
+    <aside className="w-64  bg-[#4F6170]  text-white flex flex-col">
       {/* Cabeçalho da Sidebar */}
    <div className="p-6 flex flex-col items-center">
         {/*  Imagem/Avatar do Médico  */}
