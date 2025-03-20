@@ -1,19 +1,39 @@
-import { useState } from 'react';
+"use client"
+
+import "../styles/globals.css"
+import { useState } from "react"
+import axios from "axios"
+import { useRouter } from "next/navigation"
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+  const router = useRouter()
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
     if (!email || !password) {
-      setError('Both fields are required');
-      return;
+      setError("Both fields are required")
+      return
     }
-    // Add your login logic here
-    setError('');
-  };
+    setError("")
+    try {
+      const response = await axios.post("http://localhost:90/users/login/", {
+        email,
+        password,
+      })
+      // Supondo que o endpoint retorne um token
+      const token = response.data.access_token || response.data.token
+      console.log("Login success:", token)
+      localStorage.setItem("token", token)
+      router.push("/dashboard")
+    } catch (err: any) {
+      console.error(err)
+      const detail = err.response?.data?.detail
+      setError(typeof detail === "string" ? detail : JSON.stringify(detail))
+    }
+  }
 
   return (
     <div className="flex justify-center items-center min-h-screen">
@@ -43,5 +63,5 @@ export default function Login() {
         </button>
       </form>
     </div>
-  );
+  )
 }

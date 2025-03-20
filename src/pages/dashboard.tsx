@@ -1,3 +1,6 @@
+import '../styles/globals.css'
+
+
 export default function Dashboard() {
   return (
     <div className="container mx-auto p-4">
