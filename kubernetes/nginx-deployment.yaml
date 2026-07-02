@@ -23,7 +23,7 @@ spec:
         io.kompose.service: nginx
     spec:
       containers:
-        - image: nginx:latest
+        - image: nginx:1.29-alpine
           name: awlicite-nginx
           ports:
             - containerPort: 80

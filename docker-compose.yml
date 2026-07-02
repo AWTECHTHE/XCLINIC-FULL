@@ -6,7 +6,7 @@ networks:
 
 services:
   nginx:
-    image: nginx:latest
+    image: nginx:1.29-alpine
     container_name: awlicite_nginx
     ports:
       - "90:90"
@@ -44,7 +44,7 @@ services:
     restart: always
 
   db:
-    image: postgres:13
+    image: postgres:17-alpine
     container_name: postgres_db  # Matches the hostname in DATABASE_URL
     env_file:
       - ./config/dev.env
@@ -61,7 +61,7 @@ services:
     restart: always
 
   redis:
-    image: redis:6
+    image: redis:8-alpine
     container_name: awlicite_redis
     ports:
       - "6380:6379"

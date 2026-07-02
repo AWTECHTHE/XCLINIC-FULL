@@ -26,9 +26,9 @@ spec:
         - env:
             - name: DATABASE_URL
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   key: DATABASE_URL
-                  name: db-env
+                  name: app-secret
             - name: JWT_EXPIRATION
               valueFrom:
                 configMapKeyRef:
@@ -41,14 +41,14 @@ spec:
                   name: db-env
             - name: JWT_REFRESH_SECRET
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   key: JWT_REFRESH_SECRET
-                  name: db-env
+                  name: app-secret
             - name: JWT_SECRET
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   key: JWT_SECRET
-                  name: db-env
+                  name: app-secret
             - name: POSTGRES_DB
               valueFrom:
                 configMapKeyRef:
@@ -56,15 +56,15 @@ spec:
                   name: db-env
             - name: POSTGRES_PASSWORD
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   key: POSTGRES_PASSWORD
-                  name: db-env
+                  name: app-secret
             - name: POSTGRES_USER
               valueFrom:
                 configMapKeyRef:
                   key: POSTGRES_USER
                   name: db-env
-          image: postgres:13
+          image: postgres:17-alpine
           name: postgres-db
           ports:
             - containerPort: 5432

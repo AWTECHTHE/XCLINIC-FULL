@@ -24,44 +24,49 @@ spec:
         - env:
             - name: DATABASE_URL
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   key: DATABASE_URL
-                  name: awlicite_api-env
+                  name: app-secret
             - name: JWT_EXPIRATION
               valueFrom:
                 configMapKeyRef:
                   key: JWT_EXPIRATION
-                  name: awlicite_api-env
+                  name: awlicite-api-env
             - name: JWT_REFRESH_EXPIRATION
               valueFrom:
                 configMapKeyRef:
                   key: JWT_REFRESH_EXPIRATION
-                  name: awlicite_api-env
+                  name: awlicite-api-env
             - name: JWT_REFRESH_SECRET
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   key: JWT_REFRESH_SECRET
-                  name: awlicite_api-env
+                  name: app-secret
             - name: JWT_SECRET
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   key: JWT_SECRET
-                  name: awlicite_api-env
+                  name: app-secret
+            - name: ALLOWED_HOSTS
+              valueFrom:
+                configMapKeyRef:
+                  key: ALLOWED_HOSTS
+                  name: awlicite-api-env
             - name: POSTGRES_DB
               valueFrom:
                 configMapKeyRef:
                   key: POSTGRES_DB
-                  name: awlicite_api-env
+                  name: awlicite-api-env
             - name: POSTGRES_PASSWORD
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   key: POSTGRES_PASSWORD
-                  name: awlicite_api-env
+                  name: app-secret
             - name: POSTGRES_USER
               valueFrom:
                 configMapKeyRef:
                   key: POSTGRES_USER
-                  name: awlicite_api-env
+                  name: awlicite-api-env
             - name: PYTHONPATH
               value: /app
           image: awlicite-api

@@ -7,6 +7,7 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 echo "Iniciando instalação do Docker, Kubernetes, Docker Compose e Snap..."
+MINIKUBE_VERSION="${MINIKUBE_VERSION:-v1.36.0}"
 
 # Instalando o Snap
 echo "Instalando o Snap..."
@@ -49,7 +50,7 @@ apt-get install -y curl wget apt-transport-https
 snap install kubectl --classic
 
 # Baixando e instalando o Minikube
-curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+curl -LO "https://storage.googleapis.com/minikube/releases/${MINIKUBE_VERSION}/minikube-linux-amd64"
 chmod +x minikube-linux-amd64
 mv minikube-linux-amd64 /usr/local/bin/minikube
 sudo apt-get update
@@ -60,16 +61,7 @@ minikube start
 # Verificando a instalação do Minikube
 minikube version
 
-# 3. Instalando o Docker Compose
-echo "Instalando o Docker Compose..."
-
-# Baixando a versão mais recente do Docker Compose
-curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | jq -r .tag_name)/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-
-# Tornando o Docker Compose executável
-chmod +x /usr/local/bin/docker-compose
-
 # Verificando a instalação do Docker Compose
-docker-compose --version
+docker compose version
 
 echo "Instalação do Docker, Kubernetes (Minikube), Docker Compose e Snap concluída!"
