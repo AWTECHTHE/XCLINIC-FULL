@@ -9,8 +9,8 @@ import {
   LucideCheckCircle,
 } from "lucide-react"
 import axios from "axios"
+import api from "../lib/api"
 
-import "../../styles/globals.css"
 import { UploadButton } from "../components/ui/button"
 import { cn } from "../lib/utils"
 
@@ -95,7 +95,7 @@ export default function FileUpload() {
       formData.append("file", fileWithStatus.file)
 
       try {
-        const response = await axios.post("http://localhost:90/inbody/", formData)
+        const response = await api.post(`/inbody/`, formData)
 
         setInbodyData(response.data)
 
