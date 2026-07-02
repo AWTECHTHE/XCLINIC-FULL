@@ -1,6 +1,5 @@
 import { useState } from "react";
 import Sidebar from "@/app/components/Sidebar";
-import "../styles/globals.css";
 import { User, FileText } from "lucide-react";
 
 export default function MedicalDashboard() {

@@ -148,7 +148,7 @@ export default function Home() {
                   Entrar
                 </Link>
                 <Link
-                  href="/cadastro"
+                  href="/register"
                   className="flex items-center gap-2 py-2"
                   onClick={() => setIsMenuOpen(false)}>
                   <FiUser size={20} />
@@ -179,7 +179,7 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link
-                href="/demo"
+                href="/register"
                 className="px-8 py-4 rounded-lg text-lg font-semibold text-center transition-all duration-300 
                 hover:scale-105 shadow-lg hover:shadow-xl"
                 style={{
@@ -404,7 +404,7 @@ export default function Home() {
                   ))}
                 </ul>
                 <Link
-                  href="/cadastro"
+                  href="/register"
                   className="block text-center py-3 rounded-lg font-semibold transition-all duration-300 
                   hover:scale-105 shadow-md hover:shadow-lg"
                   style={{
