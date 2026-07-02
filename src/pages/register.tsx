@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, type FormEvent } from "react"
-import axios from "axios"
 import api from "../lib/api"
 import { useRouter } from "next/navigation"
 
