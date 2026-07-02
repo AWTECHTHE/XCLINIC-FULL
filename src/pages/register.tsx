@@ -1,10 +1,7 @@
-import '../styles/globals.css'
- 
 "use client"
 
-import "../styles/globals.css"
-import { useState } from "react"
-import axios from "axios"
+import { useState, type FormEvent } from "react"
+import api from "../lib/api"
 import { useRouter } from "next/navigation"
 
 export default function Register() {
@@ -14,7 +11,7 @@ export default function Register() {
   const [error, setError] = useState("")
   const router = useRouter()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!name || !email || !password) {
       setError("All fields are required")
@@ -23,11 +20,21 @@ export default function Register() {
     setError("")
     try {
       // IMPORTANTE: enviar "username" ao back-end
-      const response = await axios.post("http://localhost:90/users/register/", {
+      const response = await api.post(`/users/register/`, {
         username: name,
         email,
         password,
       })
+      // Se backend retornar token, salvar de forma segura (opcional)
+      const token = response.data?.access_token || response.data?.token
+      if (token) {
+        try {
+          const secure = await import("../lib/secureStorage")
+          await secure.setSecureItem("xclinic_token", token)
+        } catch (e) {
+          // fallback
+        }
+      }
       console.log("Registration success:", response.data)
       router.push("/login")
     } catch (err: any) {

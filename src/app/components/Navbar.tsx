@@ -73,7 +73,7 @@ export default function Navbar() {
               Entrar
             </Link>
             <Link
-              href="/cadastro"
+              href="/register"
               className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-colors duration-300"
               style={{
                 borderColor: colors.primary,
@@ -119,7 +119,7 @@ export default function Navbar() {
                 Entrar
               </Link>
               <Link
-                href="/cadastro"
+                href="/register"
                 className="flex items-center gap-2 py-2"
                 onClick={() => setIsMenuOpen(false)}>
                 <FiUser size={20} />

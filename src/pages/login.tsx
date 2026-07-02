@@ -1,8 +1,7 @@
 "use client"
 
-import "../styles/globals.css"
-import { useState } from "react"
-import axios from "axios"
+import { useState, type FormEvent } from "react"
+import api, { setToken } from "../lib/api"
 import { useRouter } from "next/navigation"
 
 export default function Login() {
@@ -11,7 +10,7 @@ export default function Login() {
   const [error, setError] = useState("")
   const router = useRouter()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!email || !password) {
       setError("Both fields are required")
@@ -19,14 +18,23 @@ export default function Login() {
     }
     setError("")
     try {
-      const response = await axios.post("http://localhost:90/users/login/", {
+      const response = await api.post(`/users/login/`, {
         email,
         password,
       })
-      // Supondo que o endpoint retorne um token
+      // Preferência: backend deve setar cookie HttpOnly; se retornar token, armazenar
       const token = response.data.access_token || response.data.token
       console.log("Login success:", token)
-      localStorage.setItem("token", token)
+      if (token) {
+        try {
+          // Tentar usar Secure Storage (Capacitor) em apps nativos
+          const secure = await import("../lib/secureStorage")
+          await secure.setSecureItem("xclinic_token", token)
+        } catch (e) {
+          // Fallback para cookie via setToken (não HttpOnly)
+          setToken(token)
+        }
+      }
       router.push("/dashboard")
     } catch (err: any) {
       console.error(err)

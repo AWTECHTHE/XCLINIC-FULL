@@ -28,7 +28,7 @@ export default function HeroSection({ colors }: { colors: any }) {
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Link
-              href="/demo"
+              href="/register"
               className="px-8 py-4 rounded-lg text-lg font-semibold text-center transition-all duration-300 
               hover:scale-105 shadow-lg hover:shadow-xl"
               style={{
@@ -44,11 +44,12 @@ export default function HeroSection({ colors }: { colors: any }) {
             whileHover={{ scale: 1.02 }}
             transition={{ type: "spring", stiffness: 300 }}>
             <Image
-              src="/dashboard-clinica.png"
+              src="https://images.unsplash.com/photo-1526256262350-7da7584cf5eb?auto=format&fit=crop&w=900&q=80"
               alt="Dashboard XClinic"
               width={800}
               height={600}
               className="rounded-3xl shadow-2xl"
+              unoptimized
               priority
             />
           </motion.div>
