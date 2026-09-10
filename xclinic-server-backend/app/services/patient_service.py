@@ -69,3 +69,29 @@ def get_readings(
         .limit(limit)
         .all()
     )
+
+def get_reading(db: Session, patient_id: int, reading_id: int) -> BioimpedanceReading | None:
+    return (
+        db.query(BioimpedanceReading)
+        .filter(
+            BioimpedanceReading.id == reading_id,
+            BioimpedanceReading.patient_id == patient_id,
+        )
+        .first()
+    )
+
+def update_reading(
+    db: Session,
+    db_reading: BioimpedanceReading,
+    reading_update: bio_schemas.BioimpedanceReadingUpdate,
+) -> BioimpedanceReading:
+    for field, value in reading_update.model_dump(exclude_unset=True).items():
+        setattr(db_reading, field, value)
+    db.add(db_reading)
+    db.commit()
+    db.refresh(db_reading)
+    return db_reading
+
+def delete_reading(db: Session, db_reading: BioimpedanceReading) -> None:
+    db.delete(db_reading)
+    db.commit()

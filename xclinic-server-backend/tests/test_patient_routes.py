@@ -127,3 +127,81 @@ def test_readings_require_owned_patient(client):
         f"/patients/{patient['id']}/readings/", json={"weight_kg": 80}, headers=headers_d
     )
     assert response.status_code == 404
+
+
+def test_get_update_delete_reading(client, registered_user):
+    headers = _auth_headers(client, registered_user)
+    patient = _create_patient(client, headers)
+
+    response = client.post(
+        f"/patients/{patient['id']}/readings/",
+        json={"weight_kg": 70.5, "height_cm": 170},
+        headers=headers,
+    )
+    reading_id = response.json()["id"]
+
+    response = client.get(f"/patients/{patient['id']}/readings/{reading_id}", headers=headers)
+    assert response.status_code == 200
+    assert response.json()["weight_kg"] == 70.5
+
+    response = client.patch(
+        f"/patients/{patient['id']}/readings/{reading_id}",
+        json={"weight_kg": 72.0, "body_fat_percent": 20.1},
+        headers=headers,
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["weight_kg"] == 72.0
+    assert body["body_fat_percent"] == 20.1
+    assert body["height_cm"] == 170  # campo não enviado no PATCH permanece
+
+    response = client.delete(f"/patients/{patient['id']}/readings/{reading_id}", headers=headers)
+    assert response.status_code == 204
+
+    response = client.get(f"/patients/{patient['id']}/readings/{reading_id}", headers=headers)
+    assert response.status_code == 404
+
+
+def test_reading_not_found(client, registered_user):
+    headers = _auth_headers(client, registered_user)
+    patient = _create_patient(client, headers)
+
+    response = client.get(f"/patients/{patient['id']}/readings/999", headers=headers)
+    assert response.status_code == 404
+
+    response = client.patch(
+        f"/patients/{patient['id']}/readings/999", json={"weight_kg": 1}, headers=headers
+    )
+    assert response.status_code == 404
+
+    response = client.delete(f"/patients/{patient['id']}/readings/999", headers=headers)
+    assert response.status_code == 404
+
+
+def test_reading_scoped_to_owner(client):
+    client.post(
+        "/register/",
+        json={"username": "profG", "email": "g@example.com", "password": "Str0ng!Pass"},
+    )
+    login_g = client.post("/login/", json={"username": "profG", "password": "Str0ng!Pass"})
+    headers_g = {"Authorization": f"Bearer {login_g.json()['access_token']}"}
+    patient = _create_patient(client, headers_g)
+    reading = client.post(
+        f"/patients/{patient['id']}/readings/", json={"weight_kg": 60}, headers=headers_g
+    ).json()
+
+    client.post(
+        "/register/",
+        json={"username": "profH", "email": "h@example.com", "password": "Str0ng!Pass"},
+    )
+    login_h = client.post("/login/", json={"username": "profH", "password": "Str0ng!Pass"})
+    headers_h = {"Authorization": f"Bearer {login_h.json()['access_token']}"}
+
+    response = client.get(
+        f"/patients/{patient['id']}/readings/{reading['id']}", headers=headers_h
+    )
+    assert response.status_code == 404
+    response = client.delete(
+        f"/patients/{patient['id']}/readings/{reading['id']}", headers=headers_h
+    )
+    assert response.status_code == 404
