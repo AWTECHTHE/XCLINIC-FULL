@@ -1,0 +1,26 @@
+apiVersion: v1
+data:
+  access.log: |
+    172.19.0.1 - - [08/Feb/2025:05:19:37 +0000] "GET /auth HTTP/1.1" 200 26 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    172.19.0.1 - - [08/Feb/2025:05:19:38 +0000] "GET /favicon.ico HTTP/1.1" 404 22 "http://localhost/auth" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    172.19.0.1 - - [08/Feb/2025:05:20:26 +0000] "GET /users/ HTTP/1.1" 200 43 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    172.19.0.1 - - [08/Feb/2025:05:24:03 +0000] "GET /ping%22 HTTP/1.1" 404 22 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    172.19.0.1 - - [08/Feb/2025:05:24:05 +0000] "GET /ping HTTP/1.1" 404 22 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    172.19.0.1 - - [08/Feb/2025:05:24:09 +0000] "GET /ping HTTP/1.1" 404 22 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    172.19.0.1 - - [08/Feb/2025:05:24:28 +0000] "GET /ping HTTP/1.1" 404 22 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    172.19.0.1 - - [08/Feb/2025:05:27:21 +0000] "GET /ping HTTP/1.1" 200 133 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    172.19.0.1 - - [08/Feb/2025:05:27:23 +0000] "GET /ping HTTP/1.1" 200 133 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    172.19.0.1 - - [08/Feb/2025:05:27:27 +0000] "GET /ping HTTP/1.1" 200 133 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    172.19.0.1 - - [08/Feb/2025:05:27:31 +0000] "GET /users/ HTTP/1.1" 200 43 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    172.19.0.1 - - [08/Feb/2025:05:27:31 +0000] "GET /users/ HTTP/1.1" 200 43 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    172.19.0.1 - - [08/Feb/2025:05:27:32 +0000] "GET /users/ HTTP/1.1" 200 43 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    172.19.0.1 - - [08/Feb/2025:05:27:32 +0000] "GET /users/ HTTP/1.1" 200 43 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    172.19.0.1 - - [08/Feb/2025:05:27:32 +0000] "GET /users/ HTTP/1.1" 200 43 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    172.19.0.1 - - [08/Feb/2025:05:27:34 +0000] "GET /users/ HTTP/1.1" 200 43 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    172.19.0.1 - - [08/Feb/2025:05:27:34 +0000] "GET /users/ HTTP/1.1" 200 43 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+  error.log: ""
+kind: ConfigMap
+metadata:
+  labels:
+    io.kompose.service: nginx
+  name: nginx-cm1

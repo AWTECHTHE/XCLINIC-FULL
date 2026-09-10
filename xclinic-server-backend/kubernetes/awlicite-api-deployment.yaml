@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose.yml
+    kompose.version: 1.34.0 (cbf2835db)
+  labels:
+    io.kompose.service: awlicite-api
+  name: awlicite-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      io.kompose.service: awlicite-api
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose.yml
+        kompose.version: 1.34.0 (cbf2835db)
+      labels:
+        io.kompose.service: awlicite-api
+    spec:
+      containers:
+        - env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  key: DATABASE_URL
+                  name: app-secret
+            - name: JWT_EXPIRATION
+              valueFrom:
+                configMapKeyRef:
+                  key: JWT_EXPIRATION
+                  name: awlicite-api-env
+            - name: JWT_REFRESH_EXPIRATION
+              valueFrom:
+                configMapKeyRef:
+                  key: JWT_REFRESH_EXPIRATION
+                  name: awlicite-api-env
+            - name: JWT_REFRESH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: JWT_REFRESH_SECRET
+                  name: app-secret
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: JWT_SECRET
+                  name: app-secret
+            - name: ALLOWED_HOSTS
+              valueFrom:
+                configMapKeyRef:
+                  key: ALLOWED_HOSTS
+                  name: awlicite-api-env
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  key: POSTGRES_DB
+                  name: awlicite-api-env
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_PASSWORD
+                  name: app-secret
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  key: POSTGRES_USER
+                  name: awlicite-api-env
+            - name: PYTHONPATH
+              value: /app
+          image: awlicite-api
+          name: awlicite-api
+      restartPolicy: Always

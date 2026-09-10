@@ -1,0 +1,12 @@
+apiVersion: v1
+data:
+  ALLOWED_HOSTS: localhost,127.0.0.1,awlicite-api,postgres_db,yourdomain.com
+  JWT_EXPIRATION: "3600"
+  JWT_REFRESH_EXPIRATION: "86400"
+  POSTGRES_DB: your_db
+  POSTGRES_USER: your_user
+kind: ConfigMap
+metadata:
+  labels:
+    io.kompose.service: awlicite-api-awlicite-api-env
+  name: awlicite-api-env
