@@ -8,8 +8,7 @@ import {
   LucideAlertCircle,
   LucideCheckCircle,
 } from "lucide-react"
-import axios from "axios"
-import api from "../lib/api"
+import api from "../../lib/api"
 
 import { UploadButton } from "../components/ui/button"
 import { cn } from "../lib/utils"

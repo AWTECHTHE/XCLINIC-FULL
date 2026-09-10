@@ -19,23 +19,15 @@ export default function Register() {
     }
     setError("")
     try {
-      // IMPORTANTE: enviar "username" ao back-end
-      const response = await api.post(`/users/register/`, {
+      // Backend (app/routers/user.py) expõe POST /register/ e espera "username"
+      const response = await api.post(`/register/`, {
         username: name,
         email,
         password,
       })
-      // Se backend retornar token, salvar de forma segura (opcional)
-      const token = response.data?.access_token || response.data?.token
-      if (token) {
-        try {
-          const secure = await import("../lib/secureStorage")
-          await secure.setSecureItem("xclinic_token", token)
-        } catch (e) {
-          // fallback
-        }
-      }
-      console.log("Registration success:", response.data)
+      // NOTE: /register/ retorna apenas o usuário criado (sem token) — o backend
+      // exige login separado em /login/ para emitir os tokens de acesso.
+      void response
       router.push("/login")
     } catch (err: any) {
       console.error(err)

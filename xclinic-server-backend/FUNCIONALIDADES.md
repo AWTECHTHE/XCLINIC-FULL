@@ -11,11 +11,9 @@ API backend construída em **FastAPI** com persistência em **PostgreSQL** (via 
 - **Refresh de token** — `POST /token/refresh`
   Gera novo access/refresh token a partir de um refresh token válido.
 - **Listagem de usuários (autenticada)** — `GET /users/`
-  Endpoint protegido por token de acesso (atualmente retorna dados mockados).
-- **Listagem real de usuários (dev)** — `GET /list-users/`
-  Lista usuários persistidos no banco (username/email). Marcado no código como uso apenas para desenvolvimento.
+  Endpoint protegido por token de acesso. Lista usuários reais persistidos no banco, com paginação via `skip`/`limit` (limite máximo controlado por `ITEMS_PER_USER`).
 - **Dashboard** — `GET /dashboard/`
-  Endpoint protegido que retorna dados mockados de estatísticas do usuário autenticado.
+  Endpoint protegido que retorna dados do usuário autenticado e estatísticas reais (total de usuários cadastrados).
 
 ### Segurança de senha e tokens (`app/core/security.py`)
 - Hash de senha com **bcrypt** (`passlib`).
@@ -25,7 +23,7 @@ API backend construída em **FastAPI** com persistência em **PostgreSQL** (via 
 ## Itens
 
 - **Listagem de itens** — `GET /items/`
-  Endpoint simples que retorna itens (atualmente com dados mockados).
+  Endpoint simples que ainda retorna dados mockados: não existe um modelo/tabela `Item` no banco. Pendente definir o domínio (campos, dono, persistência) antes de implementar de verdade.
 
 ## Infraestrutura e Segurança de Requisições
 
@@ -60,7 +58,14 @@ API backend construída em **FastAPI** com persistência em **PostgreSQL** (via 
 - **CI**: workflow no GitHub Actions (`.github/workflows/ci.yml`).
 - Script `run.sh` para execução simplificada da aplicação.
 
+## Testes
+
+- Suíte de testes com **pytest** + `TestClient` em `tests/` (banco SQLite isolado por teste, fora do fluxo de dados de produção).
+- Cobertura atual: registro (sucesso, senha fraca, usuário duplicado), login (sucesso/falha), refresh de token, listagem de usuários (com e sem autenticação) e dashboard.
+- Rodar localmente: `pip install -r requirements-dev.txt && pytest`.
+
 ## Estado atual / observações
 
-- Os endpoints `/users/`, `/dashboard/` e `/items/` retornam atualmente **dados mockados**, não refletindo dados reais do banco (exceto `/list-users/`).
-- `/list-users/` está sinalizado no código como endpoint apenas para desenvolvimento, não recomendado para produção.
+- `GET /items/` ainda retorna **dados mockados** — não há modelo `Item` persistido no banco.
+- `/list-users/` foi removido: sua funcionalidade (listar usuários reais autenticado) foi incorporada ao `GET /users/`, que agora é paginado.
+- Corrigida incompatibilidade `passlib` + `bcrypt`: a combinação `passlib==1.7.4` + `bcrypt>=4.1` quebrava **todo** hash/verificação de senha (registro e login retornavam erro 500). `bcrypt` foi fixado em `4.0.1` até que o `passlib` seja atualizado/substituído.

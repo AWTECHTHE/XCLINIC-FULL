@@ -22,6 +22,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: pass
+          POSTGRES_DB: db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U user -d db"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
@@ -34,9 +49,9 @@ jobs:
       - name: Instalar dependências
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
 
-      - name: Verificar importação da aplicação
+      - name: Rodar testes (inclui verificação de importação da aplicação)
         env:
           JWT_SECRET: ci-test-secret
           JWT_REFRESH_SECRET: ci-test-refresh-secret
@@ -44,4 +59,4 @@ jobs:
           POSTGRES_USER: user
           POSTGRES_PASSWORD: pass
           POSTGRES_DB: db
-        run: python -c "import app.main"
+        run: python -m pytest -v

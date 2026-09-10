@@ -4,7 +4,12 @@ sqlalchemy==2.0.51
 pydantic==2.13.4
 PyJWT==2.13.0
 passlib[bcrypt]==1.7.4
-bcrypt==5.0.0
+# NOTE: pinned <4.1 on purpose. passlib 1.7.4 (last release, unmaintained)
+# cannot detect/handle bcrypt>=4.1's removed `__about__` module and its
+# stricter 72-byte handling, and raises ValueError on every hash/verify
+# call (i.e. registration and login are completely broken with bcrypt
+# 4.1+). Revisit if/when passlib ships a fix or is replaced.
+bcrypt==4.0.1
 psycopg2-binary==2.9.12
 asyncpg==0.31.0
 redis==7.0.1

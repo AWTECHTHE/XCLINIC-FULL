@@ -1,10 +1,7 @@
 // Wrapper minimal para Secure Storage do Capacitor com fallback para web
-import type { Plugins } from "@capacitor/core"
-
 let CapacitorStorage: any = null
 try {
   // Import dinâmico para não quebrar no Next server
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const cap = require("@capacitor/core")
   CapacitorStorage = cap?.Plugins?.SecureStorage || cap?.SecureStorage || null
 } catch (e) {

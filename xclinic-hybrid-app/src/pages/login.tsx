@@ -1,38 +1,40 @@
 "use client"
 
 import { useState, type FormEvent } from "react"
-import api, { setToken } from "../lib/api"
+import api, { setToken, setRefreshToken } from "../lib/api"
 import { useRouter } from "next/navigation"
 
 export default function Login() {
-  const [email, setEmail] = useState("")
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const router = useRouter()
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!email || !password) {
+    if (!username || !password) {
       setError("Both fields are required")
       return
     }
     setError("")
     try {
-      const response = await api.post(`/users/login/`, {
-        email,
+      // Backend (app/routers/user.py) expõe POST /login/ e espera "username", não "email"
+      const response = await api.post(`/login/`, {
+        username,
         password,
       })
-      // Preferência: backend deve setar cookie HttpOnly; se retornar token, armazenar
       const token = response.data.access_token || response.data.token
-      console.log("Login success:", token)
+      const refreshToken = response.data.refresh_token
       if (token) {
         try {
           // Tentar usar Secure Storage (Capacitor) em apps nativos
           const secure = await import("../lib/secureStorage")
           await secure.setSecureItem("xclinic_token", token)
+          if (refreshToken) await secure.setSecureItem("xclinic_refresh_token", refreshToken)
         } catch (e) {
           // Fallback para cookie via setToken (não HttpOnly)
           setToken(token)
+          if (refreshToken) setRefreshToken(refreshToken)
         }
       }
       router.push("/dashboard")
@@ -49,12 +51,12 @@ export default function Login() {
         <h2 className="text-2xl mb-4">Login</h2>
         {error && <p className="text-red-500 mb-4">{error}</p>}
         <div className="mb-4">
-          <label className="block mb-2">Email</label>
+          <label className="block mb-2">Username</label>
           <input
-            type="email"
+            type="text"
             className="w-full p-2 border rounded"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
           />
         </div>
         <div className="mb-4">
