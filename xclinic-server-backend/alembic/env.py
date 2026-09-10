@@ -1,4 +1,13 @@
+import sys
 from logging.config import fileConfig
+from pathlib import Path
+
+# Garante que o pacote `app` seja importável mesmo quando `alembic` é
+# chamado diretamente (fora de `python -m`) e sem PYTHONPATH configurado -
+# isto quebrava "alembic upgrade head" tanto localmente quanto no CI (o
+# docker-compose só funcionava por acaso, por setar PYTHONPATH=/app).
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from alembic import context
@@ -51,8 +60,15 @@ def run_migrations_online():
     In this scenario we need to create an Engine
     and associate a connection with the context.
     """
+    # NOTE: usa settings.DATABASE_URL (mesma fonte que app/core/database.py e
+    # o modo offline abaixo), não o valor hardcoded/placeholder de
+    # alembic.ini - antes disso, `alembic upgrade head` em produção/docker-
+    # compose se conectava com credenciais erradas (as do template do .ini),
+    # nunca com o Postgres real configurado via env vars.
+    ini_section = config.get_section(config.config_ini_section) or {}
+    ini_section["sqlalchemy.url"] = settings.DATABASE_URL.replace("postgres://", "postgresql://")
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
+        ini_section,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )

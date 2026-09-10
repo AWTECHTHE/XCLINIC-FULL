@@ -50,6 +50,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
 
+      - name: Aplicar migrações Alembic num Postgres real
+        env:
+          JWT_SECRET: ci-test-secret
+          JWT_REFRESH_SECRET: ci-test-refresh-secret
+          DATABASE_URL: postgresql://user:pass@localhost:5432/db
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: pass
+          POSTGRES_DB: db
+        run: alembic upgrade head
+
       - name: Rodar testes (inclui verificação de importação da aplicação)
         env:
           JWT_SECRET: ci-test-secret
