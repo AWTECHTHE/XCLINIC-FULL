@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -7,6 +7,7 @@ from app.routers.user import get_current_user
 from app.schemas import patient as schemas
 from app.schemas import bioimpedance as bio_schemas
 from app.services import patient_service, user_service
+from app.services.storage import get_storage
 
 router = APIRouter()
 
@@ -162,5 +163,39 @@ def delete_reading(
     _get_owned_patient_or_404(db, current_user.id, patient_id)
     db_reading = _get_owned_reading_or_404(db, patient_id, reading_id)
     patient_service.delete_reading(db, db_reading)
+
+
+@router.get("/patients/{patient_id}/readings/{reading_id}/file")
+def download_reading_file(
+    patient_id: int,
+    reading_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_db_user),
+):
+    """Baixa o arquivo original (PDF) enviado para esta leitura, se houver.
+
+    Leituras criadas antes da persistência em disco (ou via POST direto,
+    sem upload) não têm arquivo associado - 404.
+    """
+    _get_owned_patient_or_404(db, current_user.id, patient_id)
+    db_reading = _get_owned_reading_or_404(db, patient_id, reading_id)
+
+    file_info = (db_reading.raw_data or {}).get("file") if db_reading.raw_data else None
+    storage_key = file_info.get("storage_key") if file_info else None
+    if not storage_key:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No file for this reading")
+
+    try:
+        contents = get_storage().read(storage_key)
+    except (FileNotFoundError, ValueError):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Stored file not found")
+
+    filename = (file_info.get("filename") or "relatorio.pdf").replace('"', "").replace("\r", "").replace("\n", "")
+    content_type = file_info.get("content_type") or "application/pdf"
+    return Response(
+        content=contents,
+        media_type=content_type,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 # ...existing code...

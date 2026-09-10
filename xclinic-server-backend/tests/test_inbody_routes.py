@@ -43,6 +43,7 @@ def test_inbody_upload_creates_reading_with_unavailable_extraction(client, regis
 
     assert body["reading"]["patient_id"] == patient["id"]
     assert body["reading"]["raw_data"]["file"]["filename"] == "relatorio.pdf"
+    assert body["reading"]["raw_data"]["file"]["storage_key"]
     # Sem LLM_PROVIDER/LLM_API_KEY configurados neste ambiente, o extrator
     # padrão é o "indisponível": nunca inventa dados clínicos.
     assert body["reading"]["raw_data"]["extraction_status"] == "unavailable"
@@ -53,6 +54,52 @@ def test_inbody_upload_creates_reading_with_unavailable_extraction(client, regis
     # A leitura deve ter sido persistida de verdade (não só na resposta).
     readings = client.get(f"/patients/{patient['id']}/readings/", headers=headers)
     assert len(readings.json()) == 1
+
+    # O arquivo original deve poder ser baixado de volta.
+    reading_id = body["reading"]["id"]
+    download = client.get(
+        f"/patients/{patient['id']}/readings/{reading_id}/file", headers=headers
+    )
+    assert download.status_code == 200
+    assert download.content == b"%PDF-1.4 fake content"
+    assert download.headers["content-type"] == "application/pdf"
+
+
+def test_reading_without_file_has_no_download(client, registered_user):
+    headers = _auth_headers(client, registered_user)
+    patient = _create_patient(client, headers)
+    reading = client.post(
+        f"/patients/{patient['id']}/readings/", json={"weight_kg": 70}, headers=headers
+    ).json()
+
+    response = client.get(
+        f"/patients/{patient['id']}/readings/{reading['id']}/file", headers=headers
+    )
+    assert response.status_code == 404
+
+
+def test_reading_file_download_scoped_to_owner(client, registered_user):
+    headers = _auth_headers(client, registered_user)
+    patient = _create_patient(client, headers)
+    response = client.post(
+        "/inbody/",
+        data={"patient_id": str(patient["id"])},
+        files={"file": ("relatorio.pdf", b"%PDF-1.4 fake content", "application/pdf")},
+        headers=headers,
+    )
+    reading_id = response.json()["reading"]["id"]
+
+    client.post(
+        "/register/",
+        json={"username": "profI", "email": "i@example.com", "password": "Str0ng!Pass"},
+    )
+    login_i = client.post("/login/", json={"username": "profI", "password": "Str0ng!Pass"})
+    headers_i = {"Authorization": f"Bearer {login_i.json()['access_token']}"}
+
+    response = client.get(
+        f"/patients/{patient['id']}/readings/{reading_id}/file", headers=headers_i
+    )
+    assert response.status_code == 404
 
 
 class _FakeExtractor(BioimpedanceExtractor):

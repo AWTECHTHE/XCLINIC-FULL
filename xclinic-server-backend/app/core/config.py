@@ -56,5 +56,10 @@ class Settings:
         self.LLM_PROVIDER = _get_optional(env_file_values, "LLM_PROVIDER")
         self.LLM_API_KEY = _get_optional(env_file_values, "LLM_API_KEY")
         self.DOCLING_API_KEY = _get_optional(env_file_values, "DOCLING_API_KEY")
+        # Diretório onde os PDFs enviados em /inbody/ são salvos (storage em
+        # disco local - ver app/services/storage/). Em produção real, isso
+        # deveria ser um volume persistente (ou trocado por um object
+        # storage via um novo StorageBackend).
+        self.UPLOAD_DIR = _get_value(env_file_values, "UPLOAD_DIR", "uploads")
 
 settings = Settings()

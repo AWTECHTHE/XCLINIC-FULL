@@ -5,9 +5,11 @@ before any ``app.*`` module is imported (the settings singleton is built at
 import time), so this happens at the top of the file, before the app import.
 """
 import os
+import shutil
 from pathlib import Path
 
 TEST_DB_PATH = Path(__file__).parent / "test_xclinic.db"
+TEST_UPLOAD_DIR = Path(__file__).parent / "_test_uploads"
 
 os.environ.setdefault("JWT_SECRET", "test-jwt-secret")
 os.environ.setdefault("JWT_REFRESH_SECRET", "test-jwt-refresh-secret")
@@ -16,6 +18,7 @@ os.environ.setdefault("POSTGRES_USER", "test")
 os.environ.setdefault("POSTGRES_PASSWORD", "test")
 os.environ.setdefault("POSTGRES_DB", "test")
 os.environ.setdefault("ALLOWED_HOSTS", "testserver,localhost,127.0.0.1")
+os.environ.setdefault("UPLOAD_DIR", str(TEST_UPLOAD_DIR))
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
@@ -31,6 +34,12 @@ def _fresh_database():
     Base.metadata.create_all(bind=engine)
     yield
     Base.metadata.drop_all(bind=engine)
+
+
+@pytest.fixture(autouse=True)
+def _clean_upload_dir():
+    yield
+    shutil.rmtree(TEST_UPLOAD_DIR, ignore_errors=True)
 
 
 @pytest.fixture()

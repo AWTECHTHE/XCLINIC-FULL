@@ -7,6 +7,7 @@ from app.routers.patient import _get_owned_patient_or_404, get_current_db_user
 from app.schemas import bioimpedance as bio_schemas
 from app.services import patient_service
 from app.services.extraction import get_extractor
+from app.services.storage import get_storage
 
 router = APIRouter()
 
@@ -44,10 +45,11 @@ async def upload_inbody_report(
     numéricos nulos e `analise_obesidade.extraction_status = "unavailable"` -
     nunca inventamos dados clínicos que não foram de fato extraídos do PDF.
 
-    O arquivo em si também não é persistido em storage (nenhuma solução de
-    armazenamento de arquivo - disco/S3/etc. - foi definida ainda); apenas
-    seus metadados (nome, tamanho, content-type) ficam salvos em `raw_data`
-    para rastreabilidade.
+    O arquivo em si é salvo via `app.services.storage` (disco local por
+    padrão, ver `UPLOAD_DIR`); a chave de armazenamento e os metadados
+    (nome, tamanho, content-type) ficam em `raw_data.file` para
+    rastreabilidade e para permitir baixar o arquivo original depois
+    (`GET /patients/{id}/readings/{id}/file`).
     """
     if file.content_type not in ("application/pdf", "application/octet-stream"):
         raise HTTPException(
@@ -66,6 +68,8 @@ async def upload_inbody_report(
     extraction = get_extractor().extract(contents, file.filename)
     metrics = extraction.metrics
 
+    stored = get_storage().save(contents, patient_id=patient_id, filename=file.filename or "relatorio.pdf")
+
     reading_data = bio_schemas.BioimpedanceReadingCreate(
         weight_kg=metrics.weight_kg,
         height_cm=metrics.height_cm,
@@ -81,7 +85,8 @@ async def upload_inbody_report(
             "file": {
                 "filename": file.filename,
                 "content_type": file.content_type,
-                "size_bytes": len(contents),
+                "size_bytes": stored.size_bytes,
+                "storage_key": stored.key,
             },
         },
     )
