@@ -31,9 +31,11 @@ API backend construída em **FastAPI** com persistência em **PostgreSQL** (via 
   Cada leitura guarda peso, altura, %gordura, massa magra, água corporal total, metabolismo basal, ângulo de fase e o `raw_data` (JSON bruto de origem, ex: resultado de um parsing futuro via Docling/LLM), preservado para auditoria/reprocessamento.
 - Modelos: `app/models/patient.py` (`Patient`), `app/models/bioimpedance.py` (`BioimpedanceReading`, 1:N com `Patient`).
 - **Upload de relatório de bioimpedância** — `POST /inbody/` (multipart: `patient_id` + `file` PDF)
-  Recebe o PDF já esperado pela tela de upload do frontend (`FileUpload.tsx`) e cria uma `BioimpedanceReading` para o paciente informado (validando que o paciente pertence ao profissional autenticado). **Ainda não faz extração real dos dados clínicos** (isso depende de integrar Docling + um LLM, como descrito no MVP): a leitura criada vem com todos os campos numéricos nulos e `analise_obesidade.extraction_status = "pending"`. O arquivo em si não é persistido em storage nenhum ainda (sem S3/disco configurado) — apenas nome, tamanho e content-type ficam em `raw_data.file`, para rastreabilidade.
-  - **Pendente no frontend**: `uploadPage.tsx`/`FileUpload.tsx` ainda não enviam `patient_id` (não existe UI de seleção/gestão de paciente no frontend hoje) — o endpoint já está pronto, mas a tela precisa ser atualizada para escolher o paciente antes do upload.
-  - **Pendente no backend**: plugar a extração real via Docling + LLM no lugar do placeholder.
+  Recebe o PDF da tela de upload do frontend (`FileUpload.tsx`, com seletor de paciente em `uploadPage.tsx`) e cria uma `BioimpedanceReading` para o paciente informado (validando que ele pertence ao profissional autenticado).
+  - A extração dos dados clínicos passa por `app/services/extraction/` (interface plugável: `BioimpedanceExtractor.extract()`). Hoje o único provedor ativo é `UnavailableExtractor` — sem `LLM_PROVIDER`/`LLM_API_KEY` configurados, a leitura vem com métricas nulas e `analise_obesidade.extraction_status = "unavailable"`, **nunca dados clínicos inventados**.
+  - `DoclingLLMExtractor` (`app/services/extraction/docling_llm_extractor.py`) é o ponto de extensão para a integração real (Docling + LLM, como descrito no MVP): hoje é só o esqueleto (levanta `NotImplementedError`), pendente de decisão de provedor + chave de API real para desenvolver contra respostas reais. O pacote `docling` propositalmente **não** está em `requirements.txt` ainda (dependência pesada, só entra quando este extrator for implementado de verdade).
+  - Quando a extração retorna peso+altura, o IMC é calculado localmente (`_imc_metric` em `app/routers/inbody.py`) e classificado em faixas (Abaixo do peso/Normal/Limite/Alto); %gordura (PGC) é repassado como veio do extrator, sem categorização própria ainda.
+  - O arquivo em si não é persistido em storage nenhum ainda (sem S3/disco configurado) — apenas nome, tamanho e content-type ficam em `raw_data.file`, para rastreabilidade.
 
 ## Itens
 
@@ -78,7 +80,7 @@ API backend construída em **FastAPI** com persistência em **PostgreSQL** (via 
 ## Testes
 
 - Suíte de testes com **pytest** + `TestClient` em `tests/` (banco SQLite isolado por teste, fora do fluxo de dados de produção).
-- Cobertura atual: registro (sucesso, senha fraca, usuário duplicado), login (sucesso/falha), refresh de token, listagem de usuários (com e sem autenticação), dashboard, CRUD de pacientes (incluindo isolamento entre profissionais), leituras de bioimpedância e upload de relatório via `/inbody/` (autenticação, validação de tipo de arquivo, isolamento entre profissionais).
+- Cobertura atual: registro (sucesso, senha fraca, usuário duplicado), login (sucesso/falha), refresh de token, listagem de usuários (com e sem autenticação), dashboard, CRUD de pacientes (incluindo isolamento entre profissionais), leituras de bioimpedância e upload de relatório via `/inbody/` (autenticação, validação de tipo de arquivo, isolamento entre profissionais, e cálculo de IMC/PGC quando a extração retorna dados, via um extrator falso injetado no teste).
 - Rodar localmente: `pip install -r requirements-dev.txt && pytest`.
 
 ## Estado atual / observações

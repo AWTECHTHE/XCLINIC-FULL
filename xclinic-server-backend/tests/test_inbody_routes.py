@@ -1,3 +1,7 @@
+from app.routers import inbody as inbody_router
+from app.services.extraction.base import BioimpedanceExtractor, ExtractedMetrics, ExtractionResult
+
+
 def _auth_headers(client, registered_user):
     response = client.post(
         "/login/",
@@ -24,7 +28,7 @@ def test_inbody_upload_requires_auth(client):
     assert response.status_code == 401
 
 
-def test_inbody_upload_creates_pending_reading(client, registered_user):
+def test_inbody_upload_creates_reading_with_unavailable_extraction(client, registered_user):
     headers = _auth_headers(client, registered_user)
     patient = _create_patient(client, headers)
 
@@ -39,15 +43,47 @@ def test_inbody_upload_creates_pending_reading(client, registered_user):
 
     assert body["reading"]["patient_id"] == patient["id"]
     assert body["reading"]["raw_data"]["file"]["filename"] == "relatorio.pdf"
-    assert body["reading"]["raw_data"]["extraction_status"] == "pending"
-    # Extração real (Docling/LLM) ainda não implementada: métricas vêm nulas.
+    # Sem LLM_PROVIDER/LLM_API_KEY configurados neste ambiente, o extrator
+    # padrão é o "indisponível": nunca inventa dados clínicos.
+    assert body["reading"]["raw_data"]["extraction_status"] == "unavailable"
     assert body["reading"]["weight_kg"] is None
     assert body["analise_obesidade"]["imc"] is None
-    assert body["analise_obesidade"]["extraction_status"] == "pending"
+    assert body["analise_obesidade"]["extraction_status"] == "unavailable"
 
     # A leitura deve ter sido persistida de verdade (não só na resposta).
     readings = client.get(f"/patients/{patient['id']}/readings/", headers=headers)
     assert len(readings.json()) == 1
+
+
+class _FakeExtractor(BioimpedanceExtractor):
+    def extract(self, pdf_bytes: bytes, filename: str) -> ExtractionResult:
+        return ExtractionResult(
+            status="extracted",
+            metrics=ExtractedMetrics(weight_kg=70, height_cm=175, body_fat_percent=18.5),
+        )
+
+
+def test_inbody_upload_computes_imc_when_extraction_available(client, registered_user, monkeypatch):
+    monkeypatch.setattr(inbody_router, "get_extractor", lambda: _FakeExtractor())
+
+    headers = _auth_headers(client, registered_user)
+    patient = _create_patient(client, headers)
+
+    response = client.post(
+        "/inbody/",
+        data={"patient_id": str(patient["id"])},
+        files={"file": ("relatorio.pdf", b"%PDF-1.4 fake content", "application/pdf")},
+        headers=headers,
+    )
+    assert response.status_code == 201
+    body = response.json()
+
+    assert body["reading"]["weight_kg"] == 70
+    assert body["analise_obesidade"]["extraction_status"] == "extracted"
+    # IMC = 70 / 1.75^2 ≈ 22.9 -> faixa "Normal"
+    assert body["analise_obesidade"]["imc"]["valor"] == 22.9
+    assert body["analise_obesidade"]["imc"]["categoria"] == "Normal"
+    assert body["analise_obesidade"]["pgc"]["valor"] == 18.5
 
 
 def test_inbody_upload_rejects_non_pdf(client, registered_user):
