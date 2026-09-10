@@ -30,6 +30,13 @@ def _get_owned_patient_or_404(db: Session, owner_id: int, patient_id: int):
     return patient
 
 
+def _get_owned_reading_or_404(db: Session, patient_id: int, reading_id: int):
+    reading = patient_service.get_reading(db, patient_id, reading_id)
+    if not reading:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reading not found")
+    return reading
+
+
 @router.post("/patients/", response_model=schemas.Patient, status_code=status.HTTP_201_CREATED)
 def create_patient(
     patient: schemas.PatientCreate,
@@ -110,5 +117,50 @@ def list_readings(
         raise HTTPException(status_code=400, detail="skip must be >= 0")
     limit = max(1, min(limit, 200))
     return patient_service.get_readings(db, patient_id, skip=skip, limit=limit)
+
+
+@router.get(
+    "/patients/{patient_id}/readings/{reading_id}",
+    response_model=bio_schemas.BioimpedanceReading,
+)
+def get_reading(
+    patient_id: int,
+    reading_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_db_user),
+):
+    _get_owned_patient_or_404(db, current_user.id, patient_id)
+    return _get_owned_reading_or_404(db, patient_id, reading_id)
+
+
+@router.patch(
+    "/patients/{patient_id}/readings/{reading_id}",
+    response_model=bio_schemas.BioimpedanceReading,
+)
+def update_reading(
+    patient_id: int,
+    reading_id: int,
+    reading_update: bio_schemas.BioimpedanceReadingUpdate,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_db_user),
+):
+    _get_owned_patient_or_404(db, current_user.id, patient_id)
+    db_reading = _get_owned_reading_or_404(db, patient_id, reading_id)
+    return patient_service.update_reading(db, db_reading, reading_update)
+
+
+@router.delete(
+    "/patients/{patient_id}/readings/{reading_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_reading(
+    patient_id: int,
+    reading_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_db_user),
+):
+    _get_owned_patient_or_404(db, current_user.id, patient_id)
+    db_reading = _get_owned_reading_or_404(db, patient_id, reading_id)
+    patient_service.delete_reading(db, db_reading)
 
 # ...existing code...

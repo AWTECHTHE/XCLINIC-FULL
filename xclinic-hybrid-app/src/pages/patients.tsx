@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import api from "../lib/api"
 
 interface Patient {
@@ -155,7 +156,11 @@ export default function Patients() {
               <tbody>
                 {patients.map((patient) => (
                   <tr key={patient.id} className="border-t">
-                    <td className="py-2 px-4">{patient.name}</td>
+                    <td className="py-2 px-4">
+                      <Link href={`/patients/${patient.id}`} className="text-blue-600 underline">
+                        {patient.name}
+                      </Link>
+                    </td>
                     <td className="py-2 px-4">{patient.birth_date || "-"}</td>
                     <td className="py-2 px-4">{patient.sex || "-"}</td>
                     <td className="py-2 px-4 text-right">
