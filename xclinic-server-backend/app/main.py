@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import user, item, patient, inbody
+from app.routers import user, patient, inbody
 from app.core.middleware import add_middlewares
 from app.core.init_db import init_db
 import logging
@@ -34,7 +34,6 @@ add_middlewares(app)
 
 # Incluir roteadores
 app.include_router(user.router)
-app.include_router(item.router)
 app.include_router(patient.router)
 app.include_router(inbody.router)
 
