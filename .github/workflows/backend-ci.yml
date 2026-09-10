@@ -4,12 +4,11 @@ on:
   push:
     branches:
       - main
+      - claude/unify-git-repos-a7eq9e
     paths:
       - 'xclinic-server-backend/**'
       - '.github/workflows/backend-ci.yml'
   pull_request:
-    branches:
-      - main
     paths:
       - 'xclinic-server-backend/**'
       - '.github/workflows/backend-ci.yml'
