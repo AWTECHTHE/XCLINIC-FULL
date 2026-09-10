@@ -51,8 +51,9 @@ export default function Login() {
         <h2 className="text-2xl mb-4">Login</h2>
         {error && <p className="text-red-500 mb-4">{error}</p>}
         <div className="mb-4">
-          <label className="block mb-2">Username</label>
+          <label htmlFor="username" className="block mb-2">Username</label>
           <input
+            id="username"
             type="text"
             className="w-full p-2 border rounded"
             value={username}
@@ -60,8 +61,9 @@ export default function Login() {
           />
         </div>
         <div className="mb-4">
-          <label className="block mb-2">Password</label>
+          <label htmlFor="password" className="block mb-2">Password</label>
           <input
+            id="password"
             type="password"
             className="w-full p-2 border rounded"
             value={password}
