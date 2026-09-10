@@ -1,0 +1,13 @@
+# Regras gerais do monorepo. Cada subprojeto mantém seu próprio .gitignore
+# (xclinic-hybrid-app/.gitignore, xclinic-server-backend/.gitignore) com as
+# regras específicas de Node.js / Python — não duplicadas aqui.
+
+# Variáveis de ambiente locais na raiz
+.env
+.env.local
+
+# Editores e SO
+.DS_Store
+.vscode/
+.idea/
+*.swp

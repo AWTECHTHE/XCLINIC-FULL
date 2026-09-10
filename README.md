@@ -12,4 +12,31 @@ Cada diretório mantém seu próprio histórico de commits, importado via `git s
 - https://github.com/AWTECHTHE/xclinic-hybrid-app
 - https://github.com/AWTECHTHE/xclinic-server-backend
 
+> **Este é agora o repositório oficial do projeto.** Os repositórios originais acima
+> ficarão disponíveis apenas para consulta histórica e serão arquivados futuramente.
+> Todo novo desenvolvimento deve ser feito aqui.
+
 Consulte o `README.md` de cada subprojeto para instruções específicas de build, execução e deploy.
+
+## Rodando tudo junto (docker-compose)
+
+Na raiz do monorepo:
+
+```bash
+cp .env.example .env   # ajuste os valores conforme necessário
+docker compose up --build
+```
+
+Isso sobe: Nginx (porta 90), API FastAPI (porta 8000, atrás do Nginx), Postgres (5432),
+Redis (6380) e o app Next.js (3000), já configurado para chamar a API via `NEXT_PUBLIC_API_URL`.
+
+As credenciais reais do backend continuam em `xclinic-server-backend/config/dev.env`.
+
+## CI/CD
+
+O monorepo usa GitHub Actions com path filters, na raiz (`.github/workflows/`):
+
+- `backend-ci.yml` — roda quando algo em `xclinic-server-backend/**` muda.
+- `app-ci.yml` — roda quando algo em `xclinic-hybrid-app/**` muda.
+
+Cada workflow só é disparado quando o subprojeto correspondente é alterado.

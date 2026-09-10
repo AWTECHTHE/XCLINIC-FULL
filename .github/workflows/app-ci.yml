@@ -1,0 +1,43 @@
+name: App CI (Next.js)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'xclinic-hybrid-app/**'
+      - '.github/workflows/app-ci.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'xclinic-hybrid-app/**'
+      - '.github/workflows/app-ci.yml'
+
+defaults:
+  run:
+    working-directory: xclinic-hybrid-app
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+          cache-dependency-path: xclinic-hybrid-app/yarn.lock
+
+      - name: Instalar dependências
+        run: yarn install --frozen-lockfile
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Build
+        run: yarn build
