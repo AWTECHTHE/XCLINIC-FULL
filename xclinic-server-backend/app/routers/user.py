@@ -41,6 +41,11 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
             status_code=status.HTTP_409_CONFLICT,
             detail="User already exists"
         )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        )
 
 @router.post("/login/", response_model=schemas.Token)
 def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
@@ -64,29 +69,29 @@ def refresh_token(current_user: dict = Depends(get_refresh_token_payload)):
         "token_type": "bearer"
     }
 
-@router.get("/users/")
-async def read_users(current_user: dict = Depends(get_current_user)):
-    """Listar usuários - apenas para usuários autenticados"""
-    return [{"username": "user1"}, {"username": "user2"}]
+@router.get("/users/", response_model=list[schemas.User])
+def read_users(
+    skip: int = 0,
+    limit: int = 10,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    """Listar usuários persistidos - apenas para usuários autenticados"""
+    if skip < 0:
+        raise HTTPException(status_code=400, detail="skip must be >= 0")
+    limit = max(1, min(limit, settings.items_per_user))
+    return user_service.get_users(db, skip=skip, limit=limit)
 
 @router.get("/dashboard/")
-def read_dashboard(current_user: dict = Depends(get_current_user)):
-    mock_data = {
+def read_dashboard(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    """Retorna estatísticas reais do usuário autenticado e da base de usuários"""
+    total_users = user_service.count_users(db)
+    return {
         "message": "Welcome to the dashboard!",
         "user": current_user,
         "data": {
-            "stat1": 123,
-            "stat2": 456,
-            "stat3": 789
-        }
+            "total_users": total_users,
+        },
     }
-    return mock_data
-
-@router.get("/list-users/")
-def list_users(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    # This route is for development purposes only. Do not use in production.
-    from app.models.user import User
-    users = db.query(User).all()
-    return [{"username": user.username, "email": user.email} for user in users]
 
 # ...existing code...

@@ -4,12 +4,11 @@ on:
   push:
     branches:
       - main
+      - claude/unify-git-repos-a7eq9e
     paths:
       - 'xclinic-hybrid-app/**'
       - '.github/workflows/app-ci.yml'
   pull_request:
-    branches:
-      - main
     paths:
       - 'xclinic-hybrid-app/**'
       - '.github/workflows/app-ci.yml'

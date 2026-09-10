@@ -23,6 +23,11 @@ def _get_value(env_file_values: dict[str, str], key: str, default: Optional[str]
         raise RuntimeError(f"Missing required setting: {key}")
     return value
 
+def _get_optional(env_file_values: dict[str, str], key: str, default: Optional[str] = None) -> Optional[str]:
+    """Como _get_value, mas nunca levanta erro: retorna `default` (None por
+    padrão) se a variável não estiver configurada em nenhum lugar."""
+    return os.getenv(key, env_file_values.get(key, default))
+
 def _get_int(env_file_values: dict[str, str], key: str, default: int) -> int:
     try:
         return int(_get_value(env_file_values, key, str(default)))
@@ -45,5 +50,11 @@ class Settings:
         self.POSTGRES_USER = _get_value(env_file_values, "POSTGRES_USER")
         self.POSTGRES_PASSWORD = _get_value(env_file_values, "POSTGRES_PASSWORD")
         self.POSTGRES_DB = _get_value(env_file_values, "POSTGRES_DB")
+        # Extração de bioimpedância via Docling + LLM (opcional - ver
+        # app/services/extraction/). Sem essas duas configuradas, o upload
+        # em /inbody/ fica com extração "unavailable" em vez de simular dados.
+        self.LLM_PROVIDER = _get_optional(env_file_values, "LLM_PROVIDER")
+        self.LLM_API_KEY = _get_optional(env_file_values, "LLM_API_KEY")
+        self.DOCLING_API_KEY = _get_optional(env_file_values, "DOCLING_API_KEY")
 
 settings = Settings()

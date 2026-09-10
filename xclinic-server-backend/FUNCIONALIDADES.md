@@ -11,21 +11,36 @@ API backend construída em **FastAPI** com persistência em **PostgreSQL** (via 
 - **Refresh de token** — `POST /token/refresh`
   Gera novo access/refresh token a partir de um refresh token válido.
 - **Listagem de usuários (autenticada)** — `GET /users/`
-  Endpoint protegido por token de acesso (atualmente retorna dados mockados).
-- **Listagem real de usuários (dev)** — `GET /list-users/`
-  Lista usuários persistidos no banco (username/email). Marcado no código como uso apenas para desenvolvimento.
+  Endpoint protegido por token de acesso. Lista usuários reais persistidos no banco, com paginação via `skip`/`limit` (limite máximo controlado por `ITEMS_PER_USER`).
 - **Dashboard** — `GET /dashboard/`
-  Endpoint protegido que retorna dados mockados de estatísticas do usuário autenticado.
+  Endpoint protegido que retorna dados do usuário autenticado e estatísticas reais (total de usuários cadastrados).
 
 ### Segurança de senha e tokens (`app/core/security.py`)
 - Hash de senha com **bcrypt** (`passlib`).
 - Validação de força de senha: mínimo 8 caracteres, exige maiúscula, minúscula, número e símbolo.
 - Geração e verificação de **JWT** (access e refresh), com tipos distintos (`access`/`refresh`) e segredos/expiração configuráveis.
 
+## Pacientes e Bioimpedância
+
+- **Cadastro de paciente** — `POST /patients/`
+  Cria um paciente (nome, data de nascimento, sexo) vinculado ao profissional autenticado (`owner_id`).
+- **Listagem de pacientes** — `GET /patients/` (paginada via `skip`/`limit`)
+- **Detalhe, atualização e remoção** — `GET|PATCH|DELETE /patients/{id}`
+- Todas as rotas de paciente são **escopadas ao profissional autenticado**: um profissional não enxerga nem manipula pacientes de outro (retorna `404` em vez de `403`, para não vazar a existência do registro).
+- **Leituras de bioimpedância (série temporal)** — `POST /patients/{id}/readings/` e `GET /patients/{id}/readings/`
+  Cada leitura guarda peso, altura, %gordura, massa magra, água corporal total, metabolismo basal, ângulo de fase e o `raw_data` (JSON bruto de origem, ex: resultado de um parsing futuro via Docling/LLM), preservado para auditoria/reprocessamento.
+- Modelos: `app/models/patient.py` (`Patient`), `app/models/bioimpedance.py` (`BioimpedanceReading`, 1:N com `Patient`).
+- **Upload de relatório de bioimpedância** — `POST /inbody/` (multipart: `patient_id` + `file` PDF)
+  Recebe o PDF da tela de upload do frontend (`FileUpload.tsx`, com seletor de paciente em `uploadPage.tsx`) e cria uma `BioimpedanceReading` para o paciente informado (validando que ele pertence ao profissional autenticado).
+  - A extração dos dados clínicos passa por `app/services/extraction/` (interface plugável: `BioimpedanceExtractor.extract()`). Hoje o único provedor ativo é `UnavailableExtractor` — sem `LLM_PROVIDER`/`LLM_API_KEY` configurados, a leitura vem com métricas nulas e `analise_obesidade.extraction_status = "unavailable"`, **nunca dados clínicos inventados**.
+  - `DoclingLLMExtractor` (`app/services/extraction/docling_llm_extractor.py`) é o ponto de extensão para a integração real (Docling + LLM, como descrito no MVP): hoje é só o esqueleto (levanta `NotImplementedError`), pendente de decisão de provedor + chave de API real para desenvolver contra respostas reais. O pacote `docling` propositalmente **não** está em `requirements.txt` ainda (dependência pesada, só entra quando este extrator for implementado de verdade).
+  - Quando a extração retorna peso+altura, o IMC é calculado localmente (`_imc_metric` em `app/routers/inbody.py`) e classificado em faixas (Abaixo do peso/Normal/Limite/Alto); %gordura (PGC) é repassado como veio do extrator, sem categorização própria ainda.
+  - O arquivo em si não é persistido em storage nenhum ainda (sem S3/disco configurado) — apenas nome, tamanho e content-type ficam em `raw_data.file`, para rastreabilidade.
+
 ## Itens
 
 - **Listagem de itens** — `GET /items/`
-  Endpoint simples que retorna itens (atualmente com dados mockados).
+  Endpoint simples que ainda retorna dados mockados: não existe um modelo/tabela `Item` no banco. Pendente definir o domínio (campos, dono, persistência) antes de implementar de verdade.
 
 ## Infraestrutura e Segurança de Requisições
 
@@ -49,8 +64,10 @@ API backend construída em **FastAPI** com persistência em **PostgreSQL** (via 
 
 - Conexão com PostgreSQL via SQLAlchemy (`app/core/database.py`).
 - Inicialização automática do schema do banco na subida da aplicação (`init_db`).
-- Migrações de schema com **Alembic** (criar, aplicar, reverter e listar migrações).
+- Migrações de schema com **Alembic** (criar, aplicar, reverter e listar migrações) — **atenção**: `alembic/versions/` está vazio hoje (nenhuma migração foi gerada ainda, nem para `users`); na prática o schema é criado inteiramente por `init_db()` via `Base.metadata.create_all()`. `docker-compose.yml` já roda `alembic upgrade head` antes de subir a API, mas isso é um no-op sem migrações — gerar uma baseline com `alembic revision --autogenerate` (com um Postgres real rodando) é uma pendência separada.
 - Modelo de dados `User`: `id`, `username` (único), `email` (único), `hashed_password`.
+- Modelo de dados `Patient`: `id`, `owner_id` (FK `users.id`), `name`, `birth_date`, `sex`, `created_at`.
+- Modelo de dados `BioimpedanceReading`: `id`, `patient_id` (FK `patients.id`), `measured_at`, métricas de bioimpedância, `raw_data` (JSON), `created_at`.
 
 ## Infraestrutura / Deploy
 
@@ -60,7 +77,14 @@ API backend construída em **FastAPI** com persistência em **PostgreSQL** (via 
 - **CI**: workflow no GitHub Actions (`.github/workflows/ci.yml`).
 - Script `run.sh` para execução simplificada da aplicação.
 
+## Testes
+
+- Suíte de testes com **pytest** + `TestClient` em `tests/` (banco SQLite isolado por teste, fora do fluxo de dados de produção).
+- Cobertura atual: registro (sucesso, senha fraca, usuário duplicado), login (sucesso/falha), refresh de token, listagem de usuários (com e sem autenticação), dashboard, CRUD de pacientes (incluindo isolamento entre profissionais), leituras de bioimpedância e upload de relatório via `/inbody/` (autenticação, validação de tipo de arquivo, isolamento entre profissionais, e cálculo de IMC/PGC quando a extração retorna dados, via um extrator falso injetado no teste).
+- Rodar localmente: `pip install -r requirements-dev.txt && pytest`.
+
 ## Estado atual / observações
 
-- Os endpoints `/users/`, `/dashboard/` e `/items/` retornam atualmente **dados mockados**, não refletindo dados reais do banco (exceto `/list-users/`).
-- `/list-users/` está sinalizado no código como endpoint apenas para desenvolvimento, não recomendado para produção.
+- `GET /items/` ainda retorna **dados mockados** — não há modelo `Item` persistido no banco.
+- `/list-users/` foi removido: sua funcionalidade (listar usuários reais autenticado) foi incorporada ao `GET /users/`, que agora é paginado.
+- Corrigida incompatibilidade `passlib` + `bcrypt`: a combinação `passlib==1.7.4` + `bcrypt>=4.1` quebrava **todo** hash/verificação de senha (registro e login retornavam erro 500). `bcrypt` foi fixado em `4.0.1` até que o `passlib` seja atualizado/substituído.

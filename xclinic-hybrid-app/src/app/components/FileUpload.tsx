@@ -8,8 +8,7 @@ import {
   LucideAlertCircle,
   LucideCheckCircle,
 } from "lucide-react"
-import axios from "axios"
-import api from "../lib/api"
+import api from "../../lib/api"
 
 import { UploadButton } from "../components/ui/button"
 import { cn } from "../lib/utils"
@@ -33,7 +32,11 @@ function getColorByCategory(category: string | undefined) {
   return "text-red-500"
 }
 
-export default function FileUpload() {
+interface FileUploadProps {
+  patientId: number | null
+}
+
+export default function FileUpload({ patientId }: FileUploadProps) {
   const [files, setFiles] = useState<FileWithStatus[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
@@ -83,7 +86,7 @@ export default function FileUpload() {
   }
 
   const handleUpload = async () => {
-    if (files.length === 0) return
+    if (files.length === 0 || !patientId) return
 
     setIsUploading(true)
     setFiles((prevFiles) => prevFiles.map((f) => ({ ...f, status: "uploading" })))
@@ -93,6 +96,7 @@ export default function FileUpload() {
     const uploadPromises = files.map(async (fileWithStatus) => {
       const formData = new FormData()
       formData.append("file", fileWithStatus.file)
+      formData.append("patient_id", String(patientId))
 
       try {
         const response = await api.post(`/inbody/`, formData)
@@ -240,9 +244,17 @@ export default function FileUpload() {
 
       {/* Botão de Upload */}
       <div className="mt-6">
-        <UploadButton onClick={handleUpload} disabled={files.length === 0 || isUploading}>
+        <UploadButton
+          onClick={handleUpload}
+          disabled={files.length === 0 || isUploading || !patientId}
+        >
           {isUploading ? "Enviando..." : "Enviar Arquivos"}
         </UploadButton>
+        {!patientId && (
+          <p className="mt-2 text-sm text-red-500">
+            Selecione um paciente antes de enviar o relatório.
+          </p>
+        )}
       </div>
 
       {/* Exibição dos dados de IMC e Gordura Corporal (PGC) */}
