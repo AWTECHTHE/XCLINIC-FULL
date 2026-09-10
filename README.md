@@ -32,6 +32,23 @@ Redis (6380) e o app Next.js (3000), já configurado para chamar a API via `NEXT
 
 As credenciais reais do backend continuam em `xclinic-server-backend/config/dev.env`.
 
+> `xclinic-server-backend/docker-compose.yml` (dentro do subprojeto) é um
+> compose **standalone/legado**, de antes da unificação em monorepo — usa
+> nomes de serviço diferentes (`awlicite_*`) e não é mantido. Use sempre o
+> `docker-compose.yml` da raiz, acima.
+
+## Testes
+
+```bash
+# Backend (a partir de xclinic-server-backend/)
+pip install -r requirements-dev.txt
+pytest
+
+# Frontend (a partir de xclinic-hybrid-app/)
+yarn install
+yarn test
+```
+
 ## CI/CD
 
 O monorepo usa GitHub Actions com path filters, na raiz (`.github/workflows/`):
