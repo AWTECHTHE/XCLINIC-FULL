@@ -17,7 +17,6 @@ venv\Scripts\activate     # Windows
 
 # Instalar FastAPI e Uvicorn
 pip install fastapi uvicorn
-chmod +x /home/matheus-levi/Documentos/WorkSpace/AWTech/xclinic-server-backend/kubernetes/install.sh
 
 # Configure as variáveis de ambiente: 
 # Copie o arquivo .env da pasta 'config' para a raiz do projeto e adicione as variáveis necessárias como em '.env.template'.
