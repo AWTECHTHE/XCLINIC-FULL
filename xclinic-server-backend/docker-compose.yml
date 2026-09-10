@@ -1,5 +1,15 @@
 version: '3.8'
 
+# NOTE: este é o docker-compose STANDALONE/LEGADO deste subprojeto (nomes de
+# serviço "awlicite_*", de antes do XClinic virar monorepo). O compose
+# OFICIAL do projeto agora é o docker-compose.yml na raiz do monorepo, que
+# orquestra este backend junto com xclinic-hybrid-app. `nginx.conf` (usado
+# por ambos) foi corrigido para apontar para o serviço "api" (nome usado no
+# compose da raiz) - ou seja, este arquivo standalone está atualmente
+# desalinhado com nginx.conf (o upstream "api:8000" não existe aqui, o
+# serviço se chama "awlicite_api"). Prefira o compose da raiz; este arquivo
+# é candidato a remoção/atualização numa limpeza futura.
+
 networks:
   awlicite_network:
     driver: bridge
