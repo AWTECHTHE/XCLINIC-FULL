@@ -51,8 +51,15 @@ def run_migrations_online():
     In this scenario we need to create an Engine
     and associate a connection with the context.
     """
+    # NOTE: usa settings.DATABASE_URL (mesma fonte que app/core/database.py e
+    # o modo offline abaixo), não o valor hardcoded/placeholder de
+    # alembic.ini - antes disso, `alembic upgrade head` em produção/docker-
+    # compose se conectava com credenciais erradas (as do template do .ini),
+    # nunca com o Postgres real configurado via env vars.
+    ini_section = config.get_section(config.config_ini_section) or {}
+    ini_section["sqlalchemy.url"] = settings.DATABASE_URL.replace("postgres://", "postgresql://")
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
+        ini_section,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
