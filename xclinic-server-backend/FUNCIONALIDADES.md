@@ -20,6 +20,18 @@ API backend construída em **FastAPI** com persistência em **PostgreSQL** (via 
 - Validação de força de senha: mínimo 8 caracteres, exige maiúscula, minúscula, número e símbolo.
 - Geração e verificação de **JWT** (access e refresh), com tipos distintos (`access`/`refresh`) e segredos/expiração configuráveis.
 
+## Pacientes e Bioimpedância
+
+- **Cadastro de paciente** — `POST /patients/`
+  Cria um paciente (nome, data de nascimento, sexo) vinculado ao profissional autenticado (`owner_id`).
+- **Listagem de pacientes** — `GET /patients/` (paginada via `skip`/`limit`)
+- **Detalhe, atualização e remoção** — `GET|PATCH|DELETE /patients/{id}`
+- Todas as rotas de paciente são **escopadas ao profissional autenticado**: um profissional não enxerga nem manipula pacientes de outro (retorna `404` em vez de `403`, para não vazar a existência do registro).
+- **Leituras de bioimpedância (série temporal)** — `POST /patients/{id}/readings/` e `GET /patients/{id}/readings/`
+  Cada leitura guarda peso, altura, %gordura, massa magra, água corporal total, metabolismo basal, ângulo de fase e o `raw_data` (JSON bruto de origem, ex: resultado de um parsing futuro via Docling/LLM), preservado para auditoria/reprocessamento.
+- Modelos: `app/models/patient.py` (`Patient`), `app/models/bioimpedance.py` (`BioimpedanceReading`, 1:N com `Patient`).
+- **Pendente**: endpoint que recebe o PDF do relatório de bioimpedância e cria a leitura automaticamente (o fluxo `PDF → extração → BioimpedanceReading` ainda não existe; hoje as leituras só podem ser criadas via JSON estruturado).
+
 ## Itens
 
 - **Listagem de itens** — `GET /items/`
@@ -47,8 +59,10 @@ API backend construída em **FastAPI** com persistência em **PostgreSQL** (via 
 
 - Conexão com PostgreSQL via SQLAlchemy (`app/core/database.py`).
 - Inicialização automática do schema do banco na subida da aplicação (`init_db`).
-- Migrações de schema com **Alembic** (criar, aplicar, reverter e listar migrações).
+- Migrações de schema com **Alembic** (criar, aplicar, reverter e listar migrações) — **atenção**: `alembic/versions/` está vazio hoje (nenhuma migração foi gerada ainda, nem para `users`); na prática o schema é criado inteiramente por `init_db()` via `Base.metadata.create_all()`. `docker-compose.yml` já roda `alembic upgrade head` antes de subir a API, mas isso é um no-op sem migrações — gerar uma baseline com `alembic revision --autogenerate` (com um Postgres real rodando) é uma pendência separada.
 - Modelo de dados `User`: `id`, `username` (único), `email` (único), `hashed_password`.
+- Modelo de dados `Patient`: `id`, `owner_id` (FK `users.id`), `name`, `birth_date`, `sex`, `created_at`.
+- Modelo de dados `BioimpedanceReading`: `id`, `patient_id` (FK `patients.id`), `measured_at`, métricas de bioimpedância, `raw_data` (JSON), `created_at`.
 
 ## Infraestrutura / Deploy
 
@@ -61,7 +75,7 @@ API backend construída em **FastAPI** com persistência em **PostgreSQL** (via 
 ## Testes
 
 - Suíte de testes com **pytest** + `TestClient` em `tests/` (banco SQLite isolado por teste, fora do fluxo de dados de produção).
-- Cobertura atual: registro (sucesso, senha fraca, usuário duplicado), login (sucesso/falha), refresh de token, listagem de usuários (com e sem autenticação) e dashboard.
+- Cobertura atual: registro (sucesso, senha fraca, usuário duplicado), login (sucesso/falha), refresh de token, listagem de usuários (com e sem autenticação), dashboard, CRUD de pacientes (incluindo isolamento entre profissionais) e leituras de bioimpedância.
 - Rodar localmente: `pip install -r requirements-dev.txt && pytest`.
 
 ## Estado atual / observações
