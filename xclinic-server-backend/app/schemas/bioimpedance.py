@@ -24,3 +24,18 @@ class BioimpedanceReading(BioimpedanceReadingBase):
 
     class Config:
         from_attributes = True
+
+class ObesityAnalysis(BaseModel):
+    """Bloco no formato que o frontend (FileUpload.tsx) já espera consumir.
+
+    Hoje sempre vem com imc/pgc nulos: a extração real do PDF (Docling + LLM)
+    ainda não está implementada, ver `extraction_status`.
+    """
+
+    imc: Optional[float] = None
+    pgc: Optional[float] = None
+    extraction_status: str = "pending"
+
+class InbodyUploadResponse(BaseModel):
+    reading: BioimpedanceReading
+    analise_obesidade: ObesityAnalysis

@@ -30,7 +30,10 @@ API backend construída em **FastAPI** com persistência em **PostgreSQL** (via 
 - **Leituras de bioimpedância (série temporal)** — `POST /patients/{id}/readings/` e `GET /patients/{id}/readings/`
   Cada leitura guarda peso, altura, %gordura, massa magra, água corporal total, metabolismo basal, ângulo de fase e o `raw_data` (JSON bruto de origem, ex: resultado de um parsing futuro via Docling/LLM), preservado para auditoria/reprocessamento.
 - Modelos: `app/models/patient.py` (`Patient`), `app/models/bioimpedance.py` (`BioimpedanceReading`, 1:N com `Patient`).
-- **Pendente**: endpoint que recebe o PDF do relatório de bioimpedância e cria a leitura automaticamente (o fluxo `PDF → extração → BioimpedanceReading` ainda não existe; hoje as leituras só podem ser criadas via JSON estruturado).
+- **Upload de relatório de bioimpedância** — `POST /inbody/` (multipart: `patient_id` + `file` PDF)
+  Recebe o PDF já esperado pela tela de upload do frontend (`FileUpload.tsx`) e cria uma `BioimpedanceReading` para o paciente informado (validando que o paciente pertence ao profissional autenticado). **Ainda não faz extração real dos dados clínicos** (isso depende de integrar Docling + um LLM, como descrito no MVP): a leitura criada vem com todos os campos numéricos nulos e `analise_obesidade.extraction_status = "pending"`. O arquivo em si não é persistido em storage nenhum ainda (sem S3/disco configurado) — apenas nome, tamanho e content-type ficam em `raw_data.file`, para rastreabilidade.
+  - **Pendente no frontend**: `uploadPage.tsx`/`FileUpload.tsx` ainda não enviam `patient_id` (não existe UI de seleção/gestão de paciente no frontend hoje) — o endpoint já está pronto, mas a tela precisa ser atualizada para escolher o paciente antes do upload.
+  - **Pendente no backend**: plugar a extração real via Docling + LLM no lugar do placeholder.
 
 ## Itens
 
@@ -75,7 +78,7 @@ API backend construída em **FastAPI** com persistência em **PostgreSQL** (via 
 ## Testes
 
 - Suíte de testes com **pytest** + `TestClient` em `tests/` (banco SQLite isolado por teste, fora do fluxo de dados de produção).
-- Cobertura atual: registro (sucesso, senha fraca, usuário duplicado), login (sucesso/falha), refresh de token, listagem de usuários (com e sem autenticação), dashboard, CRUD de pacientes (incluindo isolamento entre profissionais) e leituras de bioimpedância.
+- Cobertura atual: registro (sucesso, senha fraca, usuário duplicado), login (sucesso/falha), refresh de token, listagem de usuários (com e sem autenticação), dashboard, CRUD de pacientes (incluindo isolamento entre profissionais), leituras de bioimpedância e upload de relatório via `/inbody/` (autenticação, validação de tipo de arquivo, isolamento entre profissionais).
 - Rodar localmente: `pip install -r requirements-dev.txt && pytest`.
 
 ## Estado atual / observações
