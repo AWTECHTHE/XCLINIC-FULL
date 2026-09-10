@@ -37,11 +37,6 @@ API backend construída em **FastAPI** com persistência em **PostgreSQL** (via 
   - Quando a extração retorna peso+altura, o IMC é calculado localmente (`_imc_metric` em `app/routers/inbody.py`) e classificado em faixas (Abaixo do peso/Normal/Limite/Alto); %gordura (PGC) é repassado como veio do extrator, sem categorização própria ainda.
   - O arquivo em si não é persistido em storage nenhum ainda (sem S3/disco configurado) — apenas nome, tamanho e content-type ficam em `raw_data.file`, para rastreabilidade.
 
-## Itens
-
-- **Listagem de itens** — `GET /items/`
-  Endpoint simples que ainda retorna dados mockados: não existe um modelo/tabela `Item` no banco. Pendente definir o domínio (campos, dono, persistência) antes de implementar de verdade.
-
 ## Infraestrutura e Segurança de Requisições
 
 - **CORS** configurado (origens, métodos e headers permitidos).
@@ -88,6 +83,6 @@ API backend construída em **FastAPI** com persistência em **PostgreSQL** (via 
 
 ## Estado atual / observações
 
-- `GET /items/` ainda retorna **dados mockados** — não há modelo `Item` persistido no banco.
+- `GET /items/` (boilerplate de tutorial, sem uso real em nenhum lugar do frontend) foi removido — não havia modelo/domínio definido para "Item" no XClinic.
 - `/list-users/` foi removido: sua funcionalidade (listar usuários reais autenticado) foi incorporada ao `GET /users/`, que agora é paginado.
 - Corrigida incompatibilidade `passlib` + `bcrypt`: a combinação `passlib==1.7.4` + `bcrypt>=4.1` quebrava **todo** hash/verificação de senha (registro e login retornavam erro 500). `bcrypt` foi fixado em `4.0.1` até que o `passlib` seja atualizado/substituído.
