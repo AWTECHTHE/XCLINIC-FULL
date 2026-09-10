@@ -69,11 +69,12 @@ API backend construída em **FastAPI** com persistência em **PostgreSQL** (via 
 
 ## Infraestrutura / Deploy
 
-- **Docker**: Dockerfile da aplicação e `docker-compose.yml` para orquestração local (API + banco + cache).
-- **Kubernetes**: manifests para deployment da API, banco de dados, Redis (cache) e Nginx (proxy reverso), incluindo ConfigMaps, Secrets, Services e PersistentVolumeClaims.
-- **Nginx** como proxy reverso (`nginx.conf`).
-- **CI**: workflow no GitHub Actions (`.github/workflows/ci.yml`).
+- **Docker**: Dockerfile da aplicação; orquestração local via `docker-compose.yml` **na raiz do monorepo** (API + app + banco + cache + Nginx) — esse é o compose oficial hoje, conforme o `README.md` raiz.
+  - `xclinic-server-backend/docker-compose.yml` (standalone, nomes `awlicite_*`) é legado — ver nota no topo do arquivo.
+- **Nginx** como proxy reverso (`nginx.conf`), apontando para o serviço `api` do compose da raiz.
+- **CI**: workflows no GitHub Actions, na raiz do monorepo (`.github/workflows/backend-ci.yml`, `app-ci.yml`).
 - Script `run.sh` para execução simplificada da aplicação.
+- **Kubernetes**: removido. Havia um diretório `kubernetes/` gerado uma vez via `kompose convert` a partir do compose standalone antigo (nomes "awlicite-*") e nunca atualizado — faltava o Service da API (nada no cluster conseguiria resolvê-la), o `DATABASE_URL` do Secret apontava para um hostname que não existia como Service (`postgres_db` em vez de `db`), e um dos ConfigMaps embutia logs estáticos de fevereiro/2025 como se fossem configuração. Sem indicação de que há um deploy Kubernetes ativo (o próprio README só cita Docker/Railway/Vercel), decisão do usuário foi remover em vez de manter manifests que nunca funcionariam se aplicados.
 
 ## Testes
 
