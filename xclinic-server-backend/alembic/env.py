@@ -1,4 +1,13 @@
+import sys
 from logging.config import fileConfig
+from pathlib import Path
+
+# Garante que o pacote `app` seja importável mesmo quando `alembic` é
+# chamado diretamente (fora de `python -m`) e sem PYTHONPATH configurado -
+# isto quebrava "alembic upgrade head" tanto localmente quanto no CI (o
+# docker-compose só funcionava por acaso, por setar PYTHONPATH=/app).
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from alembic import context
