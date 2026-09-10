@@ -1,9 +1,10 @@
 "use client"
 
-import { useEffect, useState, type FormEvent } from "react"
+import { useEffect, useMemo, useState, type FormEvent } from "react"
 import { useRouter } from "next/router"
 import Link from "next/link"
 import api from "../../lib/api"
+import EvolutionChart from "../../app/components/EvolutionChart"
 
 interface Patient {
   id: number
@@ -51,6 +52,21 @@ export default function PatientDetail() {
 
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editValues, setEditValues] = useState<ReadingFormValues>(emptyForm)
+
+  const weightPoints = useMemo(
+    () =>
+      readings
+        .filter((r) => r.weight_kg !== null)
+        .map((r) => ({ date: r.measured_at, value: r.weight_kg as number })),
+    [readings]
+  )
+  const fatPoints = useMemo(
+    () =>
+      readings
+        .filter((r) => r.body_fat_percent !== null)
+        .map((r) => ({ date: r.measured_at, value: r.body_fat_percent as number })),
+    [readings]
+  )
 
   const load = async () => {
     if (!patientId) return
@@ -155,6 +171,13 @@ export default function PatientDetail() {
             {patient.birth_date || "Data de nascimento não informada"} ·{" "}
             {patient.sex || "Sexo não informado"}
           </p>
+        </div>
+      )}
+
+      {(weightPoints.length > 0 || fatPoints.length > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <EvolutionChart title="Evolução do peso" unit="kg" color="#2a78d6" points={weightPoints} />
+          <EvolutionChart title="Evolução do % de gordura" unit="%" color="#eb6834" points={fatPoints} />
         </div>
       )}
 
