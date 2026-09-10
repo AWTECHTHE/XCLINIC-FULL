@@ -113,3 +113,6 @@ dmypy.json
 
 # FastAPI specific
 *.db
+# Arquivos enviados via /inbody/ (storage local, ver app/services/storage/)
+uploads/
+tests/_test_uploads/
