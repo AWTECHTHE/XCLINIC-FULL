@@ -1,132 +1,117 @@
 # xclinic-server-backend
 
-## Instalação
+> Este subprojeto faz parte do monorepo [XCLINIC-FULL](../README.md). Para
+> subir a stack completa (API + app + banco + Redis + Nginx) da forma
+> recomendada, veja o `README.md` da raiz do monorepo e rode
+> `docker compose up --build` a partir de lá. As instruções abaixo são para
+> rodar **só a API**, sem Docker, útil para desenvolvimento local rápido.
 
-### Siga os passos abaixo para configurar o ambiente e rodar a aplicação:
+## Instalação (rodando a API sozinha, sem Docker)
 
-Clone o repositório:
+Clone o repositório e entre neste subprojeto:
 
+```bash
+git clone https://github.com/AWTECHTHE/XCLINIC-FULL.git
+cd XCLINIC-FULL/xclinic-server-backend
 ```
-git clone https://github.com/AWTECHTHE/xclinic-server-backend.git
-cd xclinic-server-backend/backend/
-```
-# Criar e ativar um ambiente virtual (opcional, mas recomendado)
+
+Crie e ative um ambiente virtual (opcional, mas recomendado):
+
+```bash
 python -m venv venv
 source venv/bin/activate  # Linux/macOS
 venv\Scripts\activate     # Windows
-
-# Instalar FastAPI e Uvicorn
-pip install fastapi uvicorn
-
-# Configure as variáveis de ambiente: 
-# Copie o arquivo .env da pasta 'config' para a raiz do projeto e adicione as variáveis necessárias como em '.env.template'.
-cp ./config/.env .env
-
-Um exemplo básico:
-
 ```
 
+Instale as dependências:
 
-# ============================
-# General Settings
-# ============================
-DEBUG=1           # 0 para produção, 1 para desenvolvimento
-SECRET_KEY=       # Insira sua SECRET_KEY
-ALLOWED_HOSTS=    # Adicione hosts separados por vírgulas
+```bash
+pip install -r requirements.txt
+# para rodar os testes também:
+pip install -r requirements-dev.txt
+```
 
-# ============================
-# JWT Configuration
-# ============================
-#minutes
-ACCESS_TOKEN_LIFETIME=60
-#DAYS
-REFRESH_TOKEN_LIFETIME=1
-# ============================
-# Database Configuration
-# ============================
-DATABASE_URL=postgres://your_user:your_password@localhost:5432/your_db
-POSTGRES_DB=your_db
+### Configurando as variáveis de ambiente
+
+Copie `config/.exemple.env` para `config/dev.env` (é o arquivo que
+`app/core/config.py` carrega por padrão) e ajuste os valores:
+
+```bash
+cp config/.exemple.env config/dev.env
+```
+
+Variáveis suportadas (ver `app/core/config.py` para a lista completa e os
+valores padrão):
+
+```
+DATABASE_URL=postgresql://your_user:your_password@localhost:5432/your_db
 POSTGRES_USER=your_user
 POSTGRES_PASSWORD=your_password
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
+POSTGRES_DB=your_db
+JWT_SECRET=troque-por-um-segredo-forte
+JWT_EXPIRATION=60          # minutos (access token)
+JWT_REFRESH_SECRET=troque-por-outro-segredo-forte
+JWT_REFRESH_EXPIRATION=1   # dias (refresh token)
+ALLOWED_HOSTS=localhost,127.0.0.1
 ```
 
-### Executando a aplicação
+### Rodando a aplicação
 
-#### Usando `run.sh`
-
-1. Certifique-se de que o script `run.sh` tem permissão de execução:
-   ```
-   chmod +x run.sh
-   ```
-
-2. Execute o script como root ou usando `sudo`:
-   ```
-   sudo ./run.sh
-   ```
-
-#### Usando `docker-compose`
-
-1. Construa e inicie os containers Docker:
-   ```
-   docker compose -f docker-compose.yml up --build
-   ```
-
-2. Execute as migrações do banco de dados:
-   ```
-   docker compose exec xclinic_api alembic upgrade head
-   ```
-
-### Gerenciando Migrações
-
-#### Gerar uma nova migração
-
-Para gerar uma nova migração, execute:
-```
-docker-compose run xclinic_api alembic revision --autogenerate -m "Initial migration"
+```bash
+uvicorn app.main:app --reload
 ```
 
-#### Aplicar migrações
+A API sobe em `http://localhost:8000` (docs interativas em `/docs`).
 
-Para aplicar migrações, execute:
-```
-docker-compose run xclinic_api alembic upgrade head
-```
+> `run.sh`, nesta pasta, **não inicia a aplicação** — é um script de
+> provisionamento de máquina (instala Docker, Docker Compose e Minikube via
+> `apt`/`snap`, requer `sudo`). Use-o só se precisar preparar um host do
+> zero; para rodar a API, use `uvicorn` (acima) ou o `docker-compose.yml` da
+> raiz do monorepo.
 
-#### Reverter migrações
+### Testes
 
-Para reverter migrações, execute:
-```
-docker-compose run xclinic_api alembic downgrade base
-```
-
-#### Listar migrações
-
-Para listar todas as migrações, execute:
-```
-docker-compose exec xclinic_api alembic history
+```bash
+pytest
 ```
 
-#### Remover todas as migrações
+## Gerenciando migrações (Alembic)
 
-Para remover todas as migrações, execute:
-```
-rm -rf /home/matheus-levi/Documentos/WorkSpace/AWTech/xclinic-server-backend/alembic/versions/*
+Rodando localmente (fora do Docker), a partir desta pasta:
+
+```bash
+# aplicar todas as migrações pendentes
+alembic upgrade head
+
+# gerar uma nova migração a partir de mudanças nos modelos
+alembic revision --autogenerate -m "descrição da mudança"
+
+# reverter até a migração inicial
+alembic downgrade base
+
+# listar o histórico de migrações
+alembic history
 ```
 
-### Acessando o banco de dados no DBeaver
+Via Docker (a partir da raiz do monorepo, usando o `docker-compose.yml`
+oficial — o serviço da API se chama `api`):
+
+```bash
+docker compose exec api alembic upgrade head
+docker compose exec api alembic revision --autogenerate -m "descrição da mudança"
+```
+
+## Acessando o banco de dados no DBeaver
 
 1. Abra o DBeaver.
 2. Clique em `Database` > `New Database Connection`.
 3. Selecione `PostgreSQL` e clique em `Next`.
-4. Preencha os campos com as seguintes informações:
+4. Preencha os campos com as informações do seu `config/dev.env` (ou do
+   `.env` da raiz do monorepo, se estiver usando `docker-compose`):
    - **Host**: `localhost`
    - **Port**: `5432`
-   - **Database**: `your_db` (substitua pelo nome do seu banco de dados)
-   - **Username**: `your_user` (substitua pelo nome do seu usuário)
-   - **Password**: `your_password` (substitua pela sua senha)
+   - **Database**: valor de `POSTGRES_DB`
+   - **Username**: valor de `POSTGRES_USER`
+   - **Password**: valor de `POSTGRES_PASSWORD`
 5. Clique em `Test Connection` para verificar a conexão.
 6. Se a conexão for bem-sucedida, clique em `Finish`.
-
-Agora você pode acessar e gerenciar o banco de dados PostgreSQL usando o DBeaver.
