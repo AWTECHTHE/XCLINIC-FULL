@@ -1,6 +1,7 @@
 
 
 import React from 'react';
+import Link from 'next/link';
 
 export default function Sidebar() {
   return (
@@ -34,6 +35,22 @@ export default function Sidebar() {
             >
               Modo consulta
             </a>
+          </li>
+          <li>
+            <Link
+              href="/patients"
+              className="block py-2 px-2 rounded hover:bg-blue-800 transition"
+            >
+              Pacientes
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/uploadPage"
+              className="block py-2 px-2 rounded hover:bg-blue-800 transition"
+            >
+              Upload de Bioimpedância
+            </Link>
           </li>
         </ul>
       </nav>

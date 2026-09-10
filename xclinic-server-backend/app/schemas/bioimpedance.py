@@ -25,6 +25,14 @@ class BioimpedanceReading(BioimpedanceReadingBase):
     class Config:
         from_attributes = True
 
+class MetricWithCategory(BaseModel):
+    """Formato que o frontend (FileUpload.tsx) já lê: valor + unidade +
+    categoria (usada para colorir o resultado: "normal"/"limite"/outro)."""
+
+    valor: Optional[float] = None
+    unidade: Optional[str] = None
+    categoria: Optional[str] = None
+
 class ObesityAnalysis(BaseModel):
     """Bloco no formato que o frontend (FileUpload.tsx) já espera consumir.
 
@@ -32,8 +40,8 @@ class ObesityAnalysis(BaseModel):
     ainda não está implementada, ver `extraction_status`.
     """
 
-    imc: Optional[float] = None
-    pgc: Optional[float] = None
+    imc: Optional[MetricWithCategory] = None
+    pgc: Optional[MetricWithCategory] = None
     extraction_status: str = "pending"
 
 class InbodyUploadResponse(BaseModel):
